@@ -5,7 +5,7 @@ import struct
 import time
 import threading
 
-TCP_IP = '127.0.0.1'
+TCP_IP = 'gentlemeninventors.com'
 TCP_PORT = 5005
 BUFFER_SIZE = 20
 MESSAGE = "Hello, World!"

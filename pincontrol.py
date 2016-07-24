@@ -13,12 +13,13 @@ class BoxMorseClient(MorseClient):
         MorseClient.__init__(self)
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(14, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-        GPIO.setup(3, GPIO.OUT, initial=GPIO.HIGH)
+        GPIO.setup(3, GPIO.OUT, initial=GPIO.LOW)
         GPIO.setup(4, GPIO.OUT, initial=GPIO.LOW)
         self.last_state = False
 
     def connect(self):
         MorseClient.connect(self)
+        self.setButtonLed(1)
 
     def press(self):
         MorseClient.press(self)
@@ -50,13 +51,23 @@ class BoxMorseClient(MorseClient):
 if __name__ == "__main__":
     mc = BoxMorseClient()
     mc.connect()
-
-    while 1:
-        time.sleep(.01)
-        button_state = mc.checkButton()
-        if button_state != mc.last_state:
-            if button_state:
-                mc.press()
-            else:
-                mc.unpress()
-            mc.last_state = button_state
+    pulses = []
+    last_state_time = time.time()
+    try:
+        while 1:
+            time.sleep(.01)
+            button_state = mc.checkButton()
+            if button_state != mc.last_state:
+                if button_state:
+                    length = time.time() - last_state_time
+                    last_state_time = time.time()
+                    pulses.append((False, length))
+                    mc.press()
+                else:
+                    length = time.time() - last_state_time
+                    last_state_time = time.time()
+                    pulses.append((True, length))
+                    mc.unpress()
+                mc.last_state = button_state
+    except KeyboardInterrupt:
+        print pulses
