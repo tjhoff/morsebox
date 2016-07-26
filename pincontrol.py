@@ -4,17 +4,17 @@ import struct
 import RPi.GPIO as GPIO
 from morseclient import MorseClient
 
-BUTTON_CHANNEL = 2
-BUTTON_LED_CHANNEL = 3
-LED_CHANNEL = 4
+BUTTON_CHANNEL = 14
+BUTTON_LED_CHANNEL = 4
+LED_CHANNEL = 15
 
 class BoxMorseClient(MorseClient):
     def __init__(self):
         MorseClient.__init__(self)
         GPIO.setmode(GPIO.BCM)
-        GPIO.setup(14, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-        GPIO.setup(3, GPIO.OUT, initial=GPIO.LOW)
-        GPIO.setup(4, GPIO.OUT, initial=GPIO.LOW)
+        GPIO.setup(BUTTON_CHANNEL, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(BUTTON_LED_CHANNEL, GPIO.OUT, initial=GPIO.LOW)
+        GPIO.setup(LED_CHANNEL, GPIO.OUT, initial=GPIO.LOW)
         self.last_state = False
 
     def connect(self):
@@ -39,14 +39,14 @@ class BoxMorseClient(MorseClient):
         self.setLed(state == True)
 
     def checkButton(self):
-        return GPIO.input(14)
+        return not GPIO.input(BUTTON_CHANNEL)
 
     def setButtonLed(self, state):
-        GPIO.output(3, state)
+        GPIO.output(BUTTON_LED_CHANNEL, state)
 
     def setLed(self, state):
         print "LED is {0}".format(state)
-        GPIO.output(4, state)
+        GPIO.output(LED_CHANNEL, state)
 
 if __name__ == "__main__":
     mc = BoxMorseClient()
