@@ -46,23 +46,25 @@ class MorseClient:
 
     def recv(self):
         while 1:
-            self.socklock.acquire()
-            data = self.s.recv(1)
-            if data:
-                message = get_message(data)
-                buf = ""
-                while buf < message.get_size():
-                    buf += self.s.recv(min(BUFFER_SIZE, len(message.get_size() - buf)))
 
-                self.socklock.release()
+            message = None
+            try:
+                data = self.s.recv(1)
+                if data:
+                    message = get_message(data)
+                    buf = ""
+                    while buf < message.get_size():
+                        buf += self.s.recv(min(BUFFER_SIZE, len(message.get_size() - buf)))
+            except socket.error as ex:
+                print "Got socket error on recv - {0}".format(ex)
+            finally:
+                pass
 
+            if (message):
                 message.from_bytes(buf)
 
                 if message.typebyte == MessageType.ClickMessage:
                     self.on_click_message(message.click)
-
-            else:
-                self.socklock.release()
 
     def on_click_message(self, click):
         pass

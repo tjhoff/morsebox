@@ -43,7 +43,6 @@ class Client:
         last_signal = time.time()
         self.ms = MorseStream()
         while self.open:
-            self.socklock.acquire()
             try:
                 data = self.conn.recv(1)
                 if data:
@@ -57,8 +56,6 @@ class Client:
                     message.from_bytes(buf)
 
                     self.message_callback(self, message)
-                else:
-                    self.socklock.release()
             except socket.error:
                 # better error handling here plox
                 print "Socket encountered error"
