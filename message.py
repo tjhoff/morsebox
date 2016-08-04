@@ -39,10 +39,12 @@ class ClickMessage(Message):
         return MessageType.to_bytes(self.typebyte) + struct.pack(self.fmt, self.state, self.time)
 
     def from_bytes(self, bytes):
+        data = None
         try:
             data = struct.unpack(self.fmt, bytes)
         except:
             print("Bytes is {0} and {1}".format(len(bytes), bytes))
+            return
         self.state = data[0]
         self.time = data[1]
 
