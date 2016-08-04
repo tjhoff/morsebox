@@ -38,7 +38,7 @@ class ClickMessage(Message):
     def to_bytes(self):
         return MessageType.to_bytes(self.typebyte) + struct.pack(self.fmt, self.state, self.time)
 
-    def from_bytes(bytes):
+    def from_bytes(self, bytes):
         data = struct.unpack(self.fmt, bytes)
         self.state = data[0]
         self.time = data[1]
@@ -52,6 +52,6 @@ class HeartbeatMessage(Message):
     def to_bytes(self):
         return MessageType.to_bytes(self.typebyte) + struct.pack(self.fmt, self.id)
 
-    def from_bytes(bytes):
+    def from_bytes(self, bytes):
         data = struct.unpack(self.fmt, bytes)
         self.id = data[0]
