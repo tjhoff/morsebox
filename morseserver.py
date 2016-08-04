@@ -92,6 +92,7 @@ try:
 
         client = Client(conn, addr, on_data, on_closed)
         print("New client connected - id {0}".format(client.id))
+        client.start()
 
         clients.append(client)
 except Exception as ex:
