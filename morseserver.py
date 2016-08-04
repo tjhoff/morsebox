@@ -91,7 +91,8 @@ try:
         client = Client(conn, addr, on_data, on_closed)
 
         clients.append(client)
-except BaseException:
+except Exception as ex:
+    print(ex)
     for client in clients:
         client.close()
     s.close()
