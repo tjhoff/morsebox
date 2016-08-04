@@ -102,7 +102,7 @@ try:
         conn, addr = s.accept()
         print dir(conn)
 
-        client = Client(conn, addr, on_data, on_closed)
+        client = Client(conn, addr, on_message, on_closed)
         print("New client connected - id {0}".format(client.id))
         client.start()
 
