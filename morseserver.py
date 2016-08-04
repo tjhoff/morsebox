@@ -26,7 +26,7 @@ class Client:
         self.addr = addr
         self.conn_thread = None
         self.ms = None
-        self.message_callback = on_data
+        self.message_callback = on_message
         self.closed_callback = on_closed
         self.open = False
         self.socklock = threading.Lock()
