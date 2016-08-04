@@ -16,7 +16,7 @@ s.bind((TCP_IP, TCP_PORT))
 
 s.listen(1)
 
-connections = []
+clients = []
 
 class Client:
     def __init__(self, conn, addr, on_data, on_closed):
@@ -95,4 +95,5 @@ except Exception as ex:
     print(ex)
     for client in clients:
         client.close()
+finally:
     s.close()
