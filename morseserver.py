@@ -65,7 +65,10 @@ class Client:
         self.close()
 
     def close(self):
-        self.conn.close()
+        try:
+            self.conn.close()
+        except socket.error:
+            print "Error on closing {0}".format(self.id)
         self.closed_callback(self)
 
     def send_data(self, data):
@@ -83,10 +86,10 @@ def on_closed(client):
 def on_data(client, data):
     print("Data {0} from client {1}".format(data, client.id))
     if data:
-        for client in clients:
-            if (client == conn):
+        for c in clients:
+            if (c.id == client.id):
                 continue
-            client.send_data(data)
+            c.send_data(data)
 
 try:
     while True:
