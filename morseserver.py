@@ -50,9 +50,7 @@ class Client:
                     buf = ""
                     while buf < message.get_size():
                         buf += self.conn.recv(min(BUFFER_SIZE, len(message.get_size() - buf)))
-
-                    self.socklock.release()
-
+                        
                     message.from_bytes(buf)
 
                     self.message_callback(self, message)
