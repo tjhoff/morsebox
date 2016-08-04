@@ -19,6 +19,7 @@ s.listen(1)
 clients = []
 
 class Client:
+    next_id = 0
     def __init__(self, conn, addr, on_data, on_closed):
         self.conn = conn
         self.addr = addr
@@ -27,6 +28,8 @@ class Client:
         self.data_callback = on_data
         self.closed_callback = on_closed
         self.open = False
+        self.id = self.next_id
+        self.next_id += 1
 
     def start(self):
         self.open = True
@@ -72,23 +75,23 @@ class Client:
 
 def on_closed(client):
     clients.remove(client)
+    print("Client {0} disconnected".format(client.id))
 
 def on_data(client, data):
+    print("Data {0} from client {1}".format(data, client.id))
     if d:
         for client in clients:
             if (client == conn):
                 continue
 
 try:
-
     while True:
 
         conn, addr = s.accept()
         print dir(conn)
 
-        print 'Client address:', addr
-
         client = Client(conn, addr, on_data, on_closed)
+        print("New client connected - id {0}".format(client.id))
 
         clients.append(client)
 except Exception as ex:
