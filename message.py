@@ -26,7 +26,7 @@ class Message:
         pass
 
     def get_size(self):
-        return struct.calcsize(fmt)
+        return struct.calcsize(self.fmt)
 
 class ClickMessage(Message):
     typebyte = MessageType.CLICK
