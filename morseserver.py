@@ -79,10 +79,11 @@ def on_closed(client):
 
 def on_data(client, data):
     print("Data {0} from client {1}".format(data, client.id))
-    if d:
+    if data:
         for client in clients:
             if (client == conn):
                 continue
+            client.send_data(data)
 
 try:
     while True:
