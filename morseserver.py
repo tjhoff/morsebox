@@ -68,7 +68,7 @@ class Client:
 
     def send_data(self, data):
         try:
-            self.conn.send_data(data)
+            self.conn.send(data)
         except socket.error:
             print "Socket encountered error on send data"
             self.close()
