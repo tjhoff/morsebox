@@ -54,7 +54,7 @@ class MorseClient:
                     message = get_message(data)
                     buf = ""
                     while len(buf) < message.get_size():
-                        buf += self.s.recv(min(BUFFER_SIZE, len(message.get_size()) - len(buf)))
+                        buf += self.s.recv(min(BUFFER_SIZE, message.get_size() - len(buf)))
             except socket.error as ex:
                 print "Got socket error on recv - {0}".format(ex)
             finally:

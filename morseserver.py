@@ -49,7 +49,7 @@ class Client:
                     message = get_message(data)
                     buf = ""
                     while len(buf) < message.get_size():
-                        buf += self.conn.recv(min(BUFFER_SIZE, len(message.get_size()) - len(buf)))
+                        buf += self.conn.recv(min(BUFFER_SIZE, message.get_size() - len(buf)))
 
                     message.from_bytes(buf)
 
