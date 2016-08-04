@@ -88,10 +88,10 @@ try:
 
         print 'Client address:', addr
 
-        client = Client(conn, addr)
+        client = Client(conn, addr, on_data, on_closed)
 
         clients.append(client)
-except KeyboardInterrupt:
+except BaseException:
     for client in clients:
         client.close()
     s.close()
