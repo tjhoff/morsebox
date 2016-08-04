@@ -70,7 +70,7 @@ class Client:
 
     def send_data(self, data):
         try:
-            d = struct.pack("?d", data[0], data[1]
+            d = struct.pack("?d", data[0], data[1])
             self.conn.send(d)
         except socket.error:
             print "Socket encountered error on send data"
