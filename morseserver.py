@@ -53,12 +53,14 @@ class Client:
                 self.open = False
                 break
             d = struct.unpack("?d", data[:16])
+
+            self.data_callback(self, d)
+
             data = data[16:]
 
             self.ms.add_pulse(not d[0], time.time() - last_signal)
             last_signal = time.time()
 
-            self.data_callback(self, d)
 
         self.close()
 
@@ -68,7 +70,8 @@ class Client:
 
     def send_data(self, data):
         try:
-            self.conn.send(data)
+            d = struct.pack("?d", data[0], data[1]
+            self.conn.send(d)
         except socket.error:
             print "Socket encountered error on send data"
             self.close()
