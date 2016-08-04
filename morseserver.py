@@ -18,14 +18,18 @@ s.listen(1)
 
 connections = []
 
-class Connection:
-    def __init__(self, conn, addr):
+class Client:
+    def __init__(self, conn, addr, on_data, on_closed):
         self.conn = conn
         self.addr = addr
         self.conn_thread = None
         self.ms = None
+        self.data_callback = on_data
+        self.closed_callback = on_closed
+        self.open = False
 
     def start(self):
+        self.open = True
         self.conn_thread = threading.Thread(target=self._recvthread)
         self.conn_thread.daemon = True
         self.conn_thread.start()
@@ -33,37 +37,47 @@ class Connection:
     def _recvthread(self):
         last_signal = time.time()
         self.ms = MorseStream()
-        while 1:
-            try:
-                data = ""
-                while (not data or len(data) < 16):
+        data = ""
+        while self.open:
 
+            try:
+
+                while (not data or len(data) < 16):
                     data += self.conn.recv(BUFFER_SIZE)
             except socket.error:
                 # better error handling here plox
                 print "Socket encountered error"
+                self.open = False
                 break
-            d = struct.unpack("?d", data)
+            d = struct.unpack("?d", data[:16])
+            data = data[16:]
 
             self.ms.add_pulse(not d[0], time.time() - last_signal)
             last_signal = time.time()
 
-            if d:
-                for connection in connections:
-                    if (conn == connection):
-                        continue
-                    try:
-                        connection.send(data)
-                    except socket.error:
-                        print "Failed sending data to connection"
+            self.data_callback(self, d)
 
+        self.close()
+
+    def close(self):
         self.conn.close()
+        self.closed_callback(self)
 
-def on_closed(conn):
+    def send_data(self, data):
+        try:
+            self.conn.send_data(data)
+        except socket.error:
+            print "Socket encountered error on send data"
+            self.close()
 
-def on_data(conn, data):
-    for connection in connections:
+def on_closed(client):
+    clients.remove(client)
 
+def on_data(client, data):
+    if d:
+        for client in clients:
+            if (client == conn):
+                continue
 
 try:
 
@@ -72,12 +86,12 @@ try:
         conn, addr = s.accept()
         print dir(conn)
 
-        print 'Connection address:', addr
+        print 'Client address:', addr
 
+        client = Client(conn, addr)
 
-
-        connections.append(conn)
+        clients.append(client)
 except KeyboardInterrupt:
-    for connection in connections:
-        connection.close()
+    for client in clients:
+        client.close()
     s.close()
