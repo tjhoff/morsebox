@@ -5,6 +5,8 @@ import struct
 import time
 import threading
 
+from message import get_message, ClickMessage, HeartbeatMessage, MessageType
+
 TCP_IP = 'gentlemeninventors.com'
 TCP_PORT = 5005
 BUFFER_SIZE = 20
@@ -13,6 +15,7 @@ MESSAGE = "Hello, World!"
 class MorseClient:
     def __init__(self):
         self.s = None
+        self.socklock = threading.Lock()
 
     def connect(self):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -26,24 +29,43 @@ class MorseClient:
         recv_thread.daemon = True
         recv_thread.start()
 
+    def _clickmsg(self, click):
+        self.socklock.acquire()
+        msg = ClickMessage()
+        msg.click = click
+        msg.time = time.time()
+
+        self.s.send(msg.to_bytes())
+        self.socklock.release()
+
     def press(self):
-        self.s.send(struct.pack("?d", True, time.time()))
+        self._clickmsg(True)
 
     def unpress(self):
-        self.s.send(struct.pack("?d", False, time.time()))
+        self._clickmsg(False)
 
     def recv(self):
         while 1:
-            data = self.s.recv(BUFFER_SIZE)
+            self.socklock.acquire()
+            data = self.s.recv(1)
             if data:
-                self.on_data(data)
+                message = get_message(data)
+                buf = ""
+                while buf < message.get_size():
+                    buf += self.s.recv(min(BUFFER_SIZE, len(message.get_size() - buf)))
 
-    def on_data(self, data):
-        d = struct.unpack("?d", data)
-        if d[0]:
-            print "on at {0}".format(d[1])
-        else:
-            print "off at {0}".format(d[1])
+                self.socklock.release()
+
+                message.from_bytes(buf)
+
+                if message.typebyte == MessageType.ClickMessage:
+                    self.on_click_message(message.click)
+
+            else:
+                self.socklock.release()
+
+    def on_click_message(self, click):
+        pass
 
 if __name__ == "__main__":
     m = MorseClient()

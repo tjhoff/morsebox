@@ -29,14 +29,8 @@ class BoxMorseClient(MorseClient):
         MorseClient.unpress(self)
         self.setButtonLed(1)
 
-    def on_data(self, data):
-
-        #deal with timing here.
-        d = struct.unpack("?d", data)
-        state = d[0]
-        time = d[1]
-
-        self.setLed(state == True)
+    def on_click_message(self, click):
+        self.setLed(click)
 
     def checkButton(self):
         return not GPIO.input(BUTTON)

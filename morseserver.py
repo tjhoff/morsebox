@@ -6,6 +6,7 @@ import threading
 import time
 
 from morsestream import MorseStream
+from message import get_message, ClickMessage, HeartbeatMessage
 
 TCP_IP = '0.0.0.0'
 TCP_PORT = 5005
@@ -20,14 +21,15 @@ clients = []
 
 class Client:
     next_id = 0
-    def __init__(self, conn, addr, on_data, on_closed):
+    def __init__(self, conn, addr, on_message, on_closed):
         self.conn = conn
         self.addr = addr
         self.conn_thread = None
         self.ms = None
-        self.data_callback = on_data
+        self.message_callback = on_data
         self.closed_callback = on_closed
         self.open = False
+        self.socklock = threading.Lock()
         self.id = self.next_id
         Client.next_id += 1
 
@@ -40,27 +42,31 @@ class Client:
     def _recvthread(self):
         last_signal = time.time()
         self.ms = MorseStream()
-        data = ""
         while self.open:
-
+            self.socklock.acquire()
             try:
+                data = self.conn.recv(1)
+                if data:
+                    message = get_message(data)
+                    buf = ""
+                    while buf < message.get_size():
+                        buf += self.conn.recv(min(BUFFER_SIZE, len(message.get_size() - buf)))
 
-                while (not data or len(data) < 16):
-                    data += self.conn.recv(BUFFER_SIZE)
+                    self.socklock.release()
+
+                    message.from_bytes(buf)
+
+                    self.message_callback(self, message)
+                else:
+                    self.socklock.release()
             except socket.error:
                 # better error handling here plox
                 print "Socket encountered error"
                 self.open = False
                 break
-            d = struct.unpack("?d", data[:16])
 
-            self.data_callback(self, d)
-
-            data = data[16:]
-
-            self.ms.add_pulse(not d[0], time.time() - last_signal)
+            #self.ms.add_pulse(not d[0], time.time() - last_signal)
             last_signal = time.time()
-
 
         self.close()
 
@@ -71,10 +77,11 @@ class Client:
             print "Error on closing {0}".format(self.id)
         self.closed_callback(self)
 
-    def send_data(self, data):
+    def send_message(self, message):
         try:
-            d = struct.pack("?d", data[0], data[1])
-            self.conn.send(d)
+            self.sockock.acquire()
+            self.conn.send(message.to_bytes())
+            self.socklock.release()
         except socket.error:
             print "Socket encountered error on send data"
             self.close()
@@ -83,13 +90,14 @@ def on_closed(client):
     clients.remove(client)
     print("Client {0} disconnected".format(client.id))
 
-def on_data(client, data):
-    print("Data {0} from client {1}".format(data, client.id))
-    if data:
+def on_message(client, msg):
+    print("Data {0} from client {1}".format(msg, client.id))
+
+    if msg:
         for c in clients:
             if (c.id == client.id):
                 continue
-            c.send_data(data)
+            c.send_data(msg)
 
 try:
     while True:
