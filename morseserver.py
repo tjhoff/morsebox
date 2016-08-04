@@ -29,7 +29,7 @@ class Client:
         self.closed_callback = on_closed
         self.open = False
         self.id = self.next_id
-        self.next_id += 1
+        Client.next_id += 1
 
     def start(self):
         self.open = True
