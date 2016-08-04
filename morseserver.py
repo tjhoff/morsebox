@@ -92,7 +92,7 @@ def on_message(client, msg):
         for c in clients:
             if (c.id == client.id):
                 continue
-            c.send_data(msg)
+            c.send_message(msg)
 
 try:
     while True:
