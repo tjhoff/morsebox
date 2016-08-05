@@ -59,12 +59,12 @@ if __name__ == "__main__":
     with open("client_config.json") as f:
         config = f.read()
 
-    json_config = json.loads(config))
+    json_config = json.loads(config)
 
     server = json_config["server"]
-    port = json_config["port"]
-    id = json_config["id"]
-    channel = json_config["channel"]
+    port = int(json_config["port"])
+    id = int(json_config["id"])
+    channel = int(json_config["channel"])
 
     mc = BoxMorseClient(server, port)
     mc.connect()

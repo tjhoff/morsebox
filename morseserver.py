@@ -163,7 +163,7 @@ if __name__ == "__main__":
     json_config = json.loads(config)
 
     ip = json_config["ip"]
-    port = json_config["port"]
+    port = int(json_config["port"])
 
     try:
         s = Server(TCP_IP, TCP_PORT)
