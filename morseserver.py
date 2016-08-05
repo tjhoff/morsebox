@@ -8,20 +8,68 @@ import time
 from morsestream import MorseStream
 from message import get_message, ClickMessage, HeartbeatMessage
 
+
 TCP_IP = '0.0.0.0'
 TCP_PORT = 5005
-BUFFER_SIZE = 20  # Normally 1024, but we want fast response
+class Server:
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    def __init__(self, ip, port):
 
-s.bind((TCP_IP, TCP_PORT))
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-s.listen(1)
+        self.s.bind((ip, port))
 
-clients = []
+        self.s.listen(1)
+
+        self.clients = []
+        self.running = True
+
+    def start(self):
+
+        self.start_thread = threading.Thread(target=self._run_server)
+        self.start_thread.daemon = True
+        self.start_thread.start()
+
+    def _run_server(self):
+        try:
+            while True:
+
+                conn, addr = self.s.accept()
+                print dir(conn)
+
+                client = Client(conn, addr, self.on_message, self.on_closed)
+                print("New client connected - id {0}".format(client.id))
+                client.start()
+
+                self.clients.append(client)
+        except Exception as ex:
+            print(ex)
+            for client in self.clients:
+                client.close()
+        finally:
+            self.s.close()
+
+    def close(self):
+        self.s.close()
+
+    def on_closed(self, client):
+        self.clients.remove(client)
+        print("Client {0} disconnected".format(client.id))
+
+    def on_message(self, client, msg):
+        print("Data {0} from client {1}".format(msg, client.id))
+
+        if msg:
+            for c in self.clients:
+                if (c.id == client.id):
+                    continue
+                c.send_message(msg)
+
 
 class Client:
     next_id = 0
+    BUFFER_SIZE = 20  # Normally 1024, but we want fast response
+
     def __init__(self, conn, addr, on_message, on_closed):
         self.conn = conn
         self.addr = addr
@@ -50,7 +98,7 @@ class Client:
                     message = get_message(data)
                     buf = ""
                     while len(buf) < message.get_size():
-                        buf += self.conn.recv(min(BUFFER_SIZE, message.get_size() - len(buf)))
+                        buf += self.conn.recv(min(self.BUFFER_SIZE, message.get_size() - len(buf)))
 
                     message.from_bytes(buf)
 
@@ -82,33 +130,6 @@ class Client:
             print "Socket encountered error on send data"
             self.close()
 
-def on_closed(client):
-    clients.remove(client)
-    print("Client {0} disconnected".format(client.id))
-
-def on_message(client, msg):
-    print("Data {0} from client {1}".format(msg, client.id))
-
-    if msg:
-        for c in clients:
-            if (c.id == client.id):
-                continue
-            c.send_message(msg)
-
-try:
-    while True:
-
-        conn, addr = s.accept()
-        print dir(conn)
-
-        client = Client(conn, addr, on_message, on_closed)
-        print("New client connected - id {0}".format(client.id))
-        client.start()
-
-        clients.append(client)
-except Exception as ex:
-    print(ex)
-    for client in clients:
-        client.close()
-finally:
-    s.close()
+if __name__ == "__main__":
+    s = Server(TCP_IP, TCP_PORT)
+    s.start()

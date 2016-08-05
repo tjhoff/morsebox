@@ -43,7 +43,7 @@ class BoxMorseClient(MorseClient):
         GPIO.output(BLUE_LED, state)
 
 if __name__ == "__main__":
-    mc = BoxMorseClient()
+    mc = BoxMorseClient("gentlemeninventors.com", 5005)
     mc.connect()
     pulses = []
     last_state_time = time.time()

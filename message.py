@@ -13,6 +13,7 @@ def get_message(typebyte):
     message_type = struct.unpack("b", typebyte)[0]
     if message_type == ClickMessage.typebyte:
         return ClickMessage()
+    return None
 
 class Message:
     typebyte = MessageType.NONE
