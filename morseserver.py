@@ -17,7 +17,7 @@ class Server:
         self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.s.bind((ip, port))
 
-        self.s.listen(1)
+        self.s.listen(3)
 
         self.clients = []
         self.channels = {}
@@ -75,6 +75,7 @@ class Server:
                 client.channel = channel
             else:
                 print "Request to join full channel {0} from {1}".format(channel, client.addr)
+                client.close()
 
         elif msg.typebyte == MessageType.CLICK:
             if not client.channel:

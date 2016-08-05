@@ -40,13 +40,15 @@ class MorseClient:
                 msg = RegisterMessage()
                 msg.id = self.id
                 msg.channel = self.channel
-                
+
                 try:
                     self.s.send(msg.to_bytes())
                 except socket.error():
                     self.reconnect = True
                     self.disconnect()
                     continue
+
+                self.on_connected()
 
                 recv_thread = threading.Thread(target=self.recv)
                 recv_thread.daemon = True
@@ -67,6 +69,8 @@ class MorseClient:
         except socket.error as ex:
             print "Got {0} while trying to disconnect...".format(ex)
             pass
+        finally:
+            self.on_disconnected()
 
     def _clickmsg(self, click):
         self.socklock.acquire()
@@ -118,6 +122,11 @@ class MorseClient:
 
     def on_click_message(self, click):
         print "Client got {0}".format(click)
+
+    def on_connected(self):
+        pass
+    def on_disconnected(self):
+        pass
 
 if __name__ == "__main__":
     m = MorseClient()
