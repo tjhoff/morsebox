@@ -166,7 +166,7 @@ if __name__ == "__main__":
     port = int(json_config["port"])
 
     try:
-        s = Server(TCP_IP, TCP_PORT)
+        s = Server(ip, port)
         s.start()
         s.start_thread.join()
     except Exception as ex:
