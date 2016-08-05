@@ -19,21 +19,28 @@ def test_server():
     print "Initializing server"
     s = morseserver.Server("127.0.0.1", 5000)
     print "Initializing client"
-    c = morseclient.MorseClient("127.0.0.1", 5000)
-    c2 = morseclient.MorseClient("127.0.0.1", 5000)
+    c = morseclient.MorseClient("127.0.0.1", 5000, 0, 0)
+    c2 = morseclient.MorseClient("127.0.0.1", 5000, 1, 0)
+
+    c3 = morseclient.MorseClient("127.0.0.1", 5000, 2, 0)
     print "Starting server"
     s.start()
     print "Starting client"
     c.connect()
+    time.sleep(.1)
+    assert len(s.channels[0]) == 1
     c2.connect()
-
-    time.sleep(1)
+    time.sleep(.1)
+    assert len(s.channels[0]) == 2
+    time.sleep(.1)
+    c3.connect()
+    assert len(s.channels[0]) == 2
 
     print "Sending press"
     c.press()
     c.unpress()
 
-    time.sleep(1)
+    time.sleep(.1)
 
     c.disconnect()
     c2.disconnect()

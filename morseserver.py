@@ -4,13 +4,11 @@ import socket
 import struct
 import threading
 import time
+import json
 
 from morsestream import MorseStream
-from message import get_message, ClickMessage, HeartbeatMessage
+from message import get_message, ClickMessage, HeartbeatMessage, MessageType
 
-
-TCP_IP = '0.0.0.0'
-TCP_PORT = 5005
 class Server:
 
     def __init__(self, ip, port):
@@ -22,6 +20,7 @@ class Server:
         self.s.listen(1)
 
         self.clients = []
+        self.channels = {}
         self.running = True
 
     def start(self):
@@ -35,7 +34,6 @@ class Server:
             while True:
 
                 conn, addr = self.s.accept()
-                print dir(conn)
 
                 client = Client(conn, addr, self.on_message, self.on_closed)
                 print("New client connected - id {0}".format(client.id))
@@ -54,20 +52,44 @@ class Server:
 
     def on_closed(self, client):
         self.clients.remove(client)
+        if client.channel and client.channel in self.channels and client in self.channels[client.channel]:
+            self.channels[client.channel].remove(client)
+            print("Client {0} removed from channel {1}".format(client.id, client.channel))
         print("Client {0} disconnected".format(client.id))
 
     def on_message(self, client, msg):
         print("Data {0} from client {1}".format(msg, client.id))
+        if not msg:
+            return
 
-        if msg:
-            for c in self.clients:
-                if (c.id == client.id):
+        if msg.typebyte == MessageType.REGISTER:
+            channel = msg.channel
+
+            if channel not in self.channels:
+                print "Created channel {0}".format(channel)
+                self.channels[channel] = []
+            print("Adding {0} to {1}".format(client.id, channel))
+            if len(self.channels[channel]) < 2:
+                self.channels[channel].append(client)
+                client.id = msg.id
+                client.channel = channel
+            else:
+                print "Request to join full channel {0} from {1}".format(channel, client.addr)
+
+        elif msg.typebyte == MessageType.CLICK:
+            if not client.channel:
+                return
+
+            for c in self.channels[client.channel]:
+                if c.id == client.id:
                     continue
                 c.send_message(msg)
 
+        elif msg.typebyte == MessageType.HEARTBEAT:
+            pass
+
 
 class Client:
-    next_id = 0
     BUFFER_SIZE = 20  # Normally 1024, but we want fast response
 
     def __init__(self, conn, addr, on_message, on_closed):
@@ -79,8 +101,8 @@ class Client:
         self.closed_callback = on_closed
         self.open = False
         self.socklock = threading.Lock()
-        self.id = self.next_id
-        Client.next_id += 1
+        self.id = None
+        self.channel = None
 
     def start(self):
         self.open = True
@@ -132,6 +154,17 @@ class Client:
 
 if __name__ == "__main__":
     s = None
+
+    import json
+
+    with open("server_config.json") as f:
+        config = f.read()
+
+    json_config = json.loads(config)
+
+    ip = json_config["ip"]
+    port = json_config["port"]
+
     try:
         s = Server(TCP_IP, TCP_PORT)
         s.start()

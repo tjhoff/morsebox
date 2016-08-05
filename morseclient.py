@@ -6,7 +6,7 @@ import time
 import threading
 import select
 
-from message import get_message, ClickMessage, HeartbeatMessage, MessageType
+from message import get_message, ClickMessage, HeartbeatMessage, RegisterMessage, MessageType
 
 TCP_IP = 'gentlemeninventors.com'
 TCP_PORT = 5005
@@ -14,12 +14,14 @@ TCP_PORT = 5005
 class MorseClient:
 
     BUFFER_SIZE = 20
-    def __init__(self, ip, port):
+    def __init__(self, ip, port, id, channel):
         self.s = None
         self.socklock = threading.Lock()
         self.ip = ip
         self.port = port
         self.connected = False
+        self.id = id
+        self.channel = channel
 
     def connect(self):
         connect_thread = threading.Thread(target=self._connect_thread)
@@ -34,6 +36,18 @@ class MorseClient:
                 self.s.connect((self.ip, self.port))
                 self.connected = True
                 #self.s.settimeout(5)
+
+                msg = RegisterMessage()
+                msg.id = self.id
+                msg.channel = self.channel
+                
+                try:
+                    self.s.send(msg.to_bytes())
+                except socket.error():
+                    self.reconnect = True
+                    self.disconnect()
+                    continue
+
                 recv_thread = threading.Thread(target=self.recv)
                 recv_thread.daemon = True
                 recv_thread.start()

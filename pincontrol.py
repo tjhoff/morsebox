@@ -54,7 +54,19 @@ class BoxMorseClient(MorseClient):
         GPIO.output(BLUE_LED, state)
 
 if __name__ == "__main__":
-    mc = BoxMorseClient("gentlemeninventors.com", 5005)
+    import json
+
+    with open("client_config.json") as f:
+        config = f.read()
+
+    json_config = json.loads(config))
+
+    server = json_config["server"]
+    port = json_config["port"]
+    id = json_config["id"]
+    channel = json_config["channel"]
+
+    mc = BoxMorseClient(server, port)
     mc.connect()
     pulses = []
     last_state_time = time.time()
