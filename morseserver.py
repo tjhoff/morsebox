@@ -131,6 +131,9 @@ class Client:
             self.close()
 
 if __name__ == "__main__":
-    s = Server(TCP_IP, TCP_PORT)
-    s.start()
-    s.start_thread.join()
+    try:
+        s = Server(TCP_IP, TCP_PORT)
+        s.start()
+        s.start_thread.join()
+    finally:
+        s.close()

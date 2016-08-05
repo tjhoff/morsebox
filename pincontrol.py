@@ -9,8 +9,8 @@ BUTTON_LED = 15
 BLUE_LED = 18
 
 class BoxMorseClient(MorseClient):
-    def __init__(self):
-        MorseClient.__init__(self)
+    def __init__(self, ip, port):
+        MorseClient.__init__(self, ip, port)
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(BUTTON, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         GPIO.setup(BUTTON_LED, GPIO.OUT, initial=GPIO.LOW)
