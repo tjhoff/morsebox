@@ -82,7 +82,7 @@ class Server:
 
             for c in self.channels[client.channel]:
                 if c.id == client.id:
-                    continue
+                    continuesudo: unable to resolve host
                 c.send_message(msg)
 
         elif msg.typebyte == MessageType.HEARTBEAT:
@@ -168,7 +168,8 @@ if __name__ == "__main__":
     try:
         s = Server(ip, port)
         s.start()
-        s.start_thread.join()
+        while s.start_thread.is_alive:
+            s.join(2)
     except Exception as ex:
         print("Encountered exception in main thread: {0}".format(ex))
     finally:
