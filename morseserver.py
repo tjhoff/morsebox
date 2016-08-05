@@ -14,7 +14,7 @@ class Server:
     def __init__(self, ip, port):
 
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
+        self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.s.bind((ip, port))
 
         self.s.listen(1)
@@ -170,6 +170,6 @@ if __name__ == "__main__":
         s.start()
         s.start_thread.join()
     except Exception as ex:
-        print(ex)
+        print("Encountered exception in main thread: {0}".format(ex))
     finally:
         s.close()

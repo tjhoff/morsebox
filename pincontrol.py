@@ -9,8 +9,8 @@ BUTTON_LED = 15
 BLUE_LED = 18
 
 class BoxMorseClient(MorseClient):
-    def __init__(self, ip, port):
-        MorseClient.__init__(self, ip, port)
+    def __init__(self, ip, port, id, channel):
+        MorseClient.__init__(self, ip, port, id, channel)
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(BUTTON, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         GPIO.setup(BUTTON_LED, GPIO.OUT, initial=GPIO.LOW)
@@ -66,7 +66,7 @@ if __name__ == "__main__":
     id = int(json_config["id"])
     channel = int(json_config["channel"])
 
-    mc = BoxMorseClient(server, port)
+    mc = BoxMorseClient(server, port, id, channel)
     mc.connect()
     pulses = []
     last_state_time = time.time()
