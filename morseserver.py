@@ -133,3 +133,4 @@ class Client:
 if __name__ == "__main__":
     s = Server(TCP_IP, TCP_PORT)
     s.start()
+    s.start_thread.join()
