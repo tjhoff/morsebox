@@ -33,7 +33,7 @@ class MorseClient:
                 self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.s.connect((self.ip, self.port))
                 self.connected = True
-                self.s.settimeout(5)
+                #self.s.settimeout(5)
                 recv_thread = threading.Thread(target=self.recv)
                 recv_thread.daemon = True
                 recv_thread.start()

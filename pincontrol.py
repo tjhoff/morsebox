@@ -21,6 +21,13 @@ class BoxMorseClient(MorseClient):
         MorseClient.connect(self)
         self.setButtonLed(1)
 
+    def error(self, flashes = 4):
+        for i in range(flashes):
+            self.setButtonLed(1)
+            time.sleep(.1)
+            self.setButtonLed(0)
+            time.sleep(.1)
+
     def press(self):
         if self.connected:
             MorseClient.press(self)
@@ -30,6 +37,8 @@ class BoxMorseClient(MorseClient):
         if self.connected:
             MorseClient.unpress(self)
             self.setButtonLed(1)
+        else:
+            self.error()
 
     def on_click_message(self, click):
         self.setLed(click)
