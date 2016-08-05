@@ -169,7 +169,7 @@ if __name__ == "__main__":
         s = Server(ip, port)
         s.start()
         while s.start_thread.is_alive:
-            s.join(5)
+            s.start_thread.join(5)
     except Exception as ex:
         print("Encountered exception in main thread: {0}".format(ex))
     finally:
