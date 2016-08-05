@@ -32,7 +32,7 @@ class Server:
     def _run_server(self):
         try:
             while True:
-
+                print("Waiting for connection")
                 conn, addr = self.s.accept()
 
                 client = Client(conn, addr, self.on_message, self.on_closed)
@@ -169,5 +169,7 @@ if __name__ == "__main__":
         s = Server(TCP_IP, TCP_PORT)
         s.start()
         s.start_thread.join()
+    except Exception as ex:
+        print(ex)
     finally:
         s.close()
