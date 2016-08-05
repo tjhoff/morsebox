@@ -22,12 +22,14 @@ class BoxMorseClient(MorseClient):
         self.setButtonLed(1)
 
     def press(self):
-        MorseClient.press(self)
-        self.setButtonLed(0)
+        if self.connected:
+            MorseClient.press(self)
+            self.setButtonLed(0)
 
     def unpress(self):
-        MorseClient.unpress(self)
-        self.setButtonLed(1)
+        if self.connected:
+            MorseClient.unpress(self)
+            self.setButtonLed(1)
 
     def on_click_message(self, click):
         self.setLed(click)

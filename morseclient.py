@@ -4,6 +4,7 @@ import socket
 import struct
 import time
 import threading
+import select
 
 from message import get_message, ClickMessage, HeartbeatMessage, MessageType
 
@@ -18,30 +19,52 @@ class MorseClient:
         self.socklock = threading.Lock()
         self.ip = ip
         self.port = port
+        self.connected = False
 
     def connect(self):
-        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        while True:
+        connect_thread = threading.Thread(target=self._connect_thread)
+        connect_thread.daemon = True
+        connect_thread.start()
+
+    def _connect_thread(self):
+        while not self.connected:
             try:
+                self.reconnect = False
+                self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.s.connect((self.ip, self.port))
-                break
+                self.connected = True
+                self.s.settimeout(5)
+                recv_thread = threading.Thread(target=self.recv)
+                recv_thread.daemon = True
+                recv_thread.start()
+                recv_thread.join()
+                if not self.reconnect:
+                    break
+                print "Reconnecting..."
             except socket.error as ex:
                 print "Failed to connect - {0}".format(ex)
                 time.sleep(.5)
-        recv_thread = threading.Thread(target=self.recv)
-        recv_thread.daemon = True
-        recv_thread.start()
 
     def disconnect(self):
-        self.s.close()
+        try:
+            self.connected = False
+            #self.s.shutdown(socket.SHUT_WR)
+            self.s.close()
+        except socket.error as ex:
+            print "Got {0} while trying to disconnect...".format(ex)
+            pass
 
     def _clickmsg(self, click):
         self.socklock.acquire()
         msg = ClickMessage()
         msg.state = click
         msg.time = time.time()
-
-        self.s.send(msg.to_bytes())
+        try:
+            self.s.send(msg.to_bytes())
+        except socket.error as ex:
+            print "Got socket error on send - {0}".format(ex)
+            self.reconnect = True
+            self.disconnect()
         self.socklock.release()
 
     def press(self):
@@ -51,7 +74,7 @@ class MorseClient:
         self._clickmsg(False)
 
     def recv(self):
-        while 1:
+        while self.connected:
 
             message = None
             try:
@@ -65,17 +88,19 @@ class MorseClient:
                     while len(buf) < message.get_size():
                         buf += self.s.recv(min(self.BUFFER_SIZE, message.get_size() - len(buf)))
             except socket.error as ex:
+                if socket.error == socket.timeout:
+                    continue
                 print "Got socket error on recv - {0}".format(ex)
-            finally:
-                pass
-
+                self.reconnect = True
+                self.disconnect()
+                break
             if message:
                 message.from_bytes(buf)
-                print message.state
-                print message.time
 
                 if message.typebyte == MessageType.CLICK:
                     self.on_click_message(message.state)
+        print "Recv thread exiting"
+
 
     def on_click_message(self, click):
         print "Client got {0}".format(click)

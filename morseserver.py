@@ -93,6 +93,8 @@ class Client:
         self.ms = MorseStream()
         while self.open:
             try:
+            except socket.timeout:
+                continue
                 data = self.conn.recv(1)
                 if data:
                     message = get_message(data)
@@ -131,6 +133,7 @@ class Client:
             self.close()
 
 if __name__ == "__main__":
+    s = None
     try:
         s = Server(TCP_IP, TCP_PORT)
         s.start()
