@@ -7,6 +7,7 @@ import time
 import json
 
 from morsestream import MorseStream
+from morsewebserverlive import LiveClient
 from message import get_message, ClickMessage, HeartbeatMessage, MessageType
 
 class Server:
