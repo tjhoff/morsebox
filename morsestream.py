@@ -120,7 +120,7 @@ class MorseStream:
         character = self.current_char
         self.current_char = ""
         c = convert_morse_char(character)
-        print "Character - {0}={1}".format(character, c)
+        print("Character - {0}={1}".format(character, c))
 
         if c:
             self.current_word += c
@@ -186,8 +186,8 @@ if __name__ == "__main__":
     for pulse in pulses:
         ms.add_pulse(pulse[0], pulse[1])
 
-    print len(pulses)
-    print len(ms.morse_log)
-    print ms.morse_log
-    print ms.dots_per_second
-    print ms.words
+    print(len(pulses))
+    print(len(ms.morse_log))
+    print(ms.morse_log)
+    print(ms.dots_per_second)
+    print(ms.words)

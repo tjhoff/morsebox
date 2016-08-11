@@ -7,7 +7,7 @@ import time
 import json
 
 from morsestream import MorseStream
-from morsewebserverlive import LiveClient
+from morseserverlive import LiveServer
 from message import get_message, ClickMessage, HeartbeatMessage, MessageType
 
 class Server:
@@ -67,7 +67,7 @@ class Server:
             channel = msg.channel
 
             if channel not in self.channels:
-                print "Created channel {0}".format(channel)
+                print("Created channel {0}".format(channel))
                 self.channels[channel] = []
             print("Adding {0} to {1}".format(client.id, channel))
             if len(self.channels[channel]) < 2:
@@ -75,7 +75,7 @@ class Server:
                 client.id = msg.id
                 client.channel = channel
             else:
-                print "Request to join full channel {0} from {1}".format(channel, client.addr)
+                print("Request to join full channel {0} from {1}".format(channel, client.addr))
                 client.close()
 
         elif msg.typebyte == MessageType.CLICK:
@@ -120,7 +120,7 @@ class Client:
                 data = self.conn.recv(1)
                 if data:
                     message = get_message(data)
-                    buf = ""
+                    buf = bytearray()
                     while len(buf) < message.get_size():
                         buf += self.conn.recv(min(self.BUFFER_SIZE, message.get_size() - len(buf)))
 
@@ -129,7 +129,7 @@ class Client:
                     self.message_callback(self, message)
             except socket.error:
                 # better error handling here plox
-                print "Socket encountered error"
+                print("Socket encountered error")
                 self.open = False
                 break
 
@@ -142,7 +142,7 @@ class Client:
         try:
             self.conn.close()
         except socket.error:
-            print "Error on closing {0}".format(self.id)
+            print("Error on closing {0}".format(self.id))
         self.closed_callback(self)
 
     def send_message(self, message):
@@ -151,7 +151,7 @@ class Client:
             self.conn.send(message.to_bytes())
             self.socklock.release()
         except socket.error:
-            print "Socket encountered error on send data"
+            print("Socket encountered error on send data")
             self.close()
 
 if __name__ == "__main__":

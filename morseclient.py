@@ -56,9 +56,9 @@ class MorseClient:
                 recv_thread.join()
                 if not self.reconnect:
                     break
-                print "Reconnecting..."
+                print("Reconnecting...")
             except socket.error as ex:
-                print "Failed to connect - {0}".format(ex)
+                print("Failed to connect - {0}".format(ex))
                 time.sleep(.5)
 
     def disconnect(self):
@@ -67,7 +67,7 @@ class MorseClient:
             #self.s.shutdown(socket.SHUT_WR)
             self.s.close()
         except socket.error as ex:
-            print "Got {0} while trying to disconnect...".format(ex)
+            print("Got {0} while trying to disconnect...".format(ex))
             pass
         finally:
             self.on_disconnected()
@@ -80,7 +80,7 @@ class MorseClient:
         try:
             self.s.send(msg.to_bytes())
         except socket.error as ex:
-            print "Got socket error on send - {0}".format(ex)
+            print("Got socket error on send - {0}".format(ex))
             self.reconnect = True
             self.disconnect()
         self.socklock.release()
@@ -100,7 +100,7 @@ class MorseClient:
                 if data:
                     message = get_message(data)
                     if not message:
-                        print "Message is of unknown type."
+                        print("Message is of unknown type.")
                         continue
                     buf = ""
                     while len(buf) < message.get_size():
@@ -108,7 +108,7 @@ class MorseClient:
             except socket.error as ex:
                 if socket.error == socket.timeout:
                     continue
-                print "Got socket error on recv - {0}".format(ex)
+                print("Got socket error on recv - {0}".format(ex))
                 self.reconnect = True
                 self.disconnect()
                 break
@@ -117,11 +117,11 @@ class MorseClient:
 
                 if message.typebyte == MessageType.CLICK:
                     self.on_click_message(message.state)
-        print "Recv thread exiting"
+        print("Recv thread exiting")
 
 
     def on_click_message(self, click):
-        print "Client got {0}".format(click)
+        print("Client got {0}".format(click))
 
     def on_connected(self):
         pass

@@ -1,7 +1,34 @@
 import message
 import morseserver
 import morseclient
+import morseserverlive
+
+import asyncio
+import websockets
 import time
+
+def test_live_websockets():
+    ls = morseserverlive.LiveServer()
+    ls.start()
+    client_id = 1
+    channel_id = 5
+    type_id = 2
+    data = "lol."
+
+    ls.on_message(client_id, channel_id, type_id, data)
+
+    async def test_client():
+        async with websockets.connect('ws://localhost:8765') as websocket:
+
+            msg = await websocket.recv()
+            msg_data = msg.split(",")
+            assert int(msg_data[0])==client_id
+            assert int(msg_data[1])==channel_id
+            assert int(msg_data[2])==type_id
+            assert msg_data[3] == data
+
+    asyncio.get_event_loop().run_until_complete(test_client())
+
 
 def test_message():
     msg = message.ClickMessage()
@@ -16,16 +43,16 @@ def test_message():
     assert msg2.time == msg.time
 
 def test_server():
-    print "Initializing server"
+    print("Initializing server")
     s = morseserver.Server("127.0.0.1", 5000)
-    print "Initializing client"
+    print("Initializing client")
     c = morseclient.MorseClient("127.0.0.1", 5000, 0, 0)
     c2 = morseclient.MorseClient("127.0.0.1", 5000, 1, 0)
 
     c3 = morseclient.MorseClient("127.0.0.1", 5000, 2, 0)
-    print "Starting server"
+    print("Starting server")
     s.start()
-    print "Starting client"
+    print("Starting client")
     c.connect()
     time.sleep(.1)
     assert len(s.channels[0]) == 1
@@ -36,7 +63,7 @@ def test_server():
     c3.connect()
     assert len(s.channels[0]) == 2
 
-    print "Sending press"
+    print("Sending press")
     c.press()
     c.unpress()
 

@@ -84,5 +84,4 @@ if __name__ == "__main__":
     text = raw_input()
 
     morse = convert_text(text)
-    print morse
-    print convert_morse(morse)
+    print(convert_morse(morse))

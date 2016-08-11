@@ -7,9 +7,9 @@ class CliMorseClient(MorseClient):
     def onData(self, data):
         d = struct.unpack("?d", data)
         if d[0]:
-            print "on at {0}".format(d[1])
+            print("on at {0}".format(d[1]))
         else:
-            print "off at {0}".format(d[1])
+            print("off at {0}".format(d[1]))
 
 if __name__ == "__main__":
     mc = CliMorseClient()

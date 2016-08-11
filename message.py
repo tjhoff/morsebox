@@ -11,7 +11,11 @@ class MessageType:
         return struct.pack("b", type)
 
 def get_message(typebyte):
-    message_type = struct.unpack("b", typebyte)[0]
+    print(typebyte)
+    try:
+        message_type = struct.unpack("b", typebyte)[0]
+    except TypeError:
+        message_type = typebyte
     if message_type == ClickMessage.typebyte:
         return ClickMessage()
     if message_type == RegisterMessage.typebyte:
