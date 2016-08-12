@@ -52,7 +52,7 @@ class LiveServer:
                 print("Websocket {0} disconnected".format(id))
                 del self.websocket_messages[websocket]
 
-        start_server = websockets.serve(time, '127.0.0.1', 5678)
+        start_server = websockets.serve(time, '0.0.0.0', 5678)
 
         asyncio.get_event_loop().run_until_complete(start_server)
         asyncio.get_event_loop().run_forever()
