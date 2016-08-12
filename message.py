@@ -11,7 +11,6 @@ class MessageType:
         return struct.pack("b", type)
 
 def get_message(typebyte):
-    print(typebyte)
     try:
         message_type = struct.unpack("b", typebyte)[0]
     except TypeError:
@@ -57,6 +56,8 @@ class ClickMessage(Message):
             return
         self.state = data[0]
         self.time = data[1]
+    def __repr__(self):
+        return "{0} - {1:.3f}".format(self.state, self.time)
 
 class HeartbeatMessage(Message):
     typebyte =MessageType.HEARTBEAT

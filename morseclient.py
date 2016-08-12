@@ -102,7 +102,7 @@ class MorseClient:
                     if not message:
                         print("Message is of unknown type.")
                         continue
-                    buf = ""
+                    buf = bytearray()
                     while len(buf) < message.get_size():
                         buf += self.s.recv(min(self.BUFFER_SIZE, message.get_size() - len(buf)))
             except socket.error as ex:

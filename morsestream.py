@@ -10,6 +10,7 @@ class MorseStream:
     def __init__(self):
         self.dots_per_second = None # 4.0
         self.tolerance = None
+        self.last_event = None
         self.morse_log = ""
         self.words = []
         self.pulses = []
@@ -72,7 +73,8 @@ class MorseStream:
 
         self.tolerance = .5/self.dots_per_second
 
-    def generate_pulses(self, text, dps = 4.0, variance_fn = zero):
+    @staticmethod
+    def generate_pulses(text, dps = 4.0, variance_fn = zero):
         morse = convert_text(text)
 
         pulses = []

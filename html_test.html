@@ -1,19 +1,96 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebSocket demo</title>
+        <title>Morsebox live view</title>
     </head>
     <body>
+        <canvas id="client0pulse" width="500" height="200"></canvas>
+
+          <canvas id="client1pulse" width="500" height="200"></canvas>
         <script>
+            var canvas0 = document.getElementById('client0pulse');
+            canvas0.width = document.body.clientWidth;
+            var ctx0 = canvas0.getContext('2d');
+            var canvas1 = document.getElementById('client1pulse');
+            canvas1.width = document.body.clientWidth;
+            var ctx1 = canvas1.getContext('2d');
             var ws = new WebSocket("ws://127.0.0.1:5678/"),
                 messages = document.createElement('ul');
+            var seconds_in_graph = 60;
+            var pixels_per_second = canvas0.width/seconds_in_graph;
+
+            function Client(){
+               this.last_time = null;
+               this.cur_pos = 0;
+               this.anim_dist = 0;
+               this.ctx = null;
+             }
+
+
+            Client.prototype.run = function (){
+               setInterval(function(){
+                  this.ctx.fillRect(this.cur_pos, 97, this.anim_dist, 6);
+                  this.anim_dist += .03 * pixels_per_second
+                }.bind(this), 30);
+            }
+
+            Client.prototype.handle_pulse = function (state, time){
+              if (this.last_time == null){
+                this.last_time = time;
+              }
+              var diff = time - this.last_time;
+              console.log(diff);
+              this.last_time = time;
+
+              if (state == 1){
+                  this.ctx.fillStyle = "rgb(255,255,255)";
+              }
+              else{
+                  this.ctx.fillStyle = "rgb(0,0,0)";
+              }
+              var width = diff * pixels_per_second;
+              this.ctx.fillRect (this.cur_pos,97,width,6);
+              if (state == 0){
+                  this.ctx.fillStyle = "rgb(255,255,255)";
+              }
+              else{
+                  this.ctx.fillStyle = "rgb(0,0,0)";
+              }
+              this.anim_dist = 0
+              this.cur_pos += width;
+              if (this.cur_pos > canvas0.width){
+                this.cur_pos -= canvas0.width;
+                this.ctx.clearRect(0,0,canvas0.width,200)
+              }
+            }
+
+            client0 = new Client();
+            client0.ctx = ctx0;
+            client0.run()
+
+            client1 = new Client();
+            client1.ctx = ctx1;
+            client1.run()
+
             ws.onmessage = function (event) {
-                var messages = document.getElementsByTagName('ul')[0],
-                    message = document.createElement('li'),
-                    content = document.createTextNode(event.data);
-                message.appendChild(content);
-                messages.appendChild(message);
+                var d = event.data.split(",")
+                var msgdata = d[3].split(" ")
+                var state = parseInt(msgdata[0])
+                var time = parseFloat(msgdata[1])
+                if (d[0] == "0"){
+                  client0.handle_pulse(state, time);
+                }
+                else if (d[0] == "1") {
+                  client1.handle_pulse(state, time)
+                }
             };
+            ws.onconnect = function(event){
+              var messages = document.getElementsByTagName('ul')[0],
+                  message = document.createElement('li'),
+                  content = document.createTextNode("Connected!");
+              message.appendChild(content);
+              messages.appendChild(message);
+            }
             document.body.appendChild(messages);
         </script>
     </body>

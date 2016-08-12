@@ -7,7 +7,7 @@ import time
 import json
 
 from morsestream import MorseStream
-from morseserverlive import LiveServer
+from morseserverlive import LiveServer, LiveServerMessageType
 from message import get_message, ClickMessage, HeartbeatMessage, MessageType
 
 class Server:
@@ -17,6 +17,7 @@ class Server:
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.s.bind((ip, port))
+        self.live_server = LiveServer()
 
         self.s.listen(3)
 
@@ -29,6 +30,7 @@ class Server:
         self.start_thread = threading.Thread(target=self._run_server)
         self.start_thread.daemon = True
         self.start_thread.start()
+        self.live_server.start()
 
     def _run_server(self):
         try:
@@ -59,7 +61,7 @@ class Server:
         print("Client {0} disconnected".format(client.id))
 
     def on_message(self, client, msg):
-        print("Data {0} from client {1}".format(msg, client.id))
+
         if not msg:
             return
 
@@ -69,7 +71,7 @@ class Server:
             if channel not in self.channels:
                 print("Created channel {0}".format(channel))
                 self.channels[channel] = []
-            print("Adding {0} to {1}".format(client.id, channel))
+            print("Adding {0} to {1}".format(msg.id, channel))
             if len(self.channels[channel]) < 2:
                 self.channels[channel].append(client)
                 client.id = msg.id
@@ -79,8 +81,11 @@ class Server:
                 client.close()
 
         elif msg.typebyte == MessageType.CLICK:
-            if not client.channel:
+            if client.channel == None:
+                print("Client has no channel. Ignoring.")
                 return
+
+            self.live_server.send_message(client.id, client.channel, LiveServerMessageType.PULSE, "{0} {1}".format(int(msg.state), msg.time))
 
             for c in self.channels[client.channel]:
                 if c.id == client.id:

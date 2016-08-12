@@ -2,10 +2,13 @@ import message
 import morseserver
 import morseclient
 import morseserverlive
+import morsestream
 
 import asyncio
 import websockets
+import threading
 import time
+import random
 
 def test_live_websockets():
     ls = morseserverlive.LiveServer()
@@ -15,10 +18,10 @@ def test_live_websockets():
     type_id = 2
     data = "lol."
 
-    ls.on_message(client_id, channel_id, type_id, data)
+    time.sleep(.5)
 
     async def test_client():
-        async with websockets.connect('ws://localhost:8765') as websocket:
+        async with websockets.connect('ws://127.0.0.1:5678') as websocket:
 
             msg = await websocket.recv()
             msg_data = msg.split(",")
@@ -27,7 +30,78 @@ def test_live_websockets():
             assert int(msg_data[2])==type_id
             assert msg_data[3] == data
 
-    asyncio.get_event_loop().run_until_complete(test_client())
+    def run_client():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        asyncio.get_event_loop().run_until_complete(test_client())
+
+    t = threading.Thread(target=run_client)
+    t.start()
+
+    ls.send_message(client_id, channel_id, type_id, data)
+
+    t.join()
+
+def test_live_integration():
+
+    async def test_client():
+        async with websockets.connect('ws://127.0.0.1:5678') as websocket:
+            print("Websocket connected")
+            msg = await websocket.recv()
+            print("Websocket got {0}".format(msg))
+            msg_data = msg.split(",")
+            assert int(msg_data[0])==0
+            assert int(msg_data[1])==0
+            assert int(msg_data[2])==morseserverlive.LiveServerMessageType.PULSE
+            assert msg_data[3].split(" ")[0] == "1"
+
+    def run_client():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        asyncio.get_event_loop().run_until_complete(test_client())
+
+    print("Initializing server")
+    s = morseserver.Server("127.0.0.1", 5000)
+    print("Initializing client")
+    c = morseclient.MorseClient("127.0.0.1", 5000, 0, 0)
+
+    c2 = morseclient.MorseClient("127.0.0.1", 5000, 1, 0)
+
+    s.start()
+    time.sleep(.1)
+
+    t = threading.Thread(target=run_client)
+    t.daemon = True
+    #t.start()
+
+    c.connect()
+    c2.connect()
+
+    time.sleep(.1)
+
+    def run_client(client, message):
+        pulses = morsestream.MorseStream.generate_pulses(message, 4)
+        for pulse in pulses:
+            if not pulse[0]:
+                time.sleep(pulse[1])
+            else:
+                client.press()
+                time.sleep(pulse[1])
+                client.unpress()
+        client.unpress()
+
+    t1 = threading.Thread(target=run_client, kwargs={"client": c, "message": "hello you butthole"})
+
+    t2 = threading.Thread(target=run_client, kwargs={"client": c2,  "message": "you are a jerk"})
+    t1.daemon = t2.daemon = True
+    t1.start()
+    t2.start()
+
+    t1.join()
+
+    c.disconnect()
+    c2.disconnect()
+    s.close()
 
 
 def test_message():
@@ -74,4 +148,4 @@ def test_server():
     s.close()
 
 if __name__ == "__main__":
-    test_server()
+    test_live_integration()
