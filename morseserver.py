@@ -138,7 +138,8 @@ class Client:
                 self.open = False
                 break
 
-            #self.ms.add_pulse(not d[0], time.time() - last_signal)
+            self.ms.add_pulse(not d[0], time.time() - last_signal)
+            
             last_signal = time.time()
 
         self.close()

@@ -4,9 +4,10 @@
         <title>Morsebox live view</title>
     </head>
     <body>
-        <canvas id="client0pulse" width="500" height="200"></canvas>
-
-          <canvas id="client1pulse" width="500" height="200"></canvas>
+        <h3>Box 1:<h3>
+        <canvas id="client0pulse" width="500" height="10"></canvas>
+          <h3>Box 2:<h3>
+          <canvas id="client1pulse" width="500" height="10"></canvas>
         <script>
             var canvas0 = document.getElementById('client0pulse');
             canvas0.width = document.body.clientWidth;
@@ -16,7 +17,7 @@
             var ctx1 = canvas1.getContext('2d');
             var ws = new WebSocket("ws://gentlemeninventors.com:5678/"),
                 messages = document.createElement('ul');
-            var seconds_in_graph = 60;
+            var seconds_in_graph = 30;
             var pixels_per_second = canvas0.width/seconds_in_graph;
 
             function Client(){
@@ -24,17 +25,40 @@
                this.cur_pos = 0;
                this.anim_dist = 0;
                this.ctx = null;
+               this.canvas = null;
+               this.running = false;
+             }
+
+             Client.prototype.clear = function(){
+               this.ctx.fillStyle = "rgb(230,230,230)";
+               this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height)
              }
 
 
             Client.prototype.run = function (){
-               setInterval(function(){
-                  this.ctx.fillRect(this.cur_pos, 97, this.anim_dist, 6);
-                  this.anim_dist += .03 * pixels_per_second
-                }.bind(this), 30);
+              this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
+               var interval = setInterval(function(){
+                  if (!this.running){
+                    return;
+                  }
+                  this.ctx.fillRect(this.cur_pos, 2, this.anim_dist * pixels_per_second, 6);
+                  this.anim_dist += .05;
+                  // 30 seconds to timeout
+                  if (this.anim_dist > 30.0){
+                    this.cur_pos = 0;
+                    this.running = false;
+                    this.last_time = null;
+                    this.clear()
+                    clearInterval(interval);
+                  }
+                }.bind(this), 50);
             }
 
             Client.prototype.handle_pulse = function (state, time){
+              if (!this.running){
+                this.running = true;
+                this.run()
+              }
               if (this.last_time == null){
                 this.last_time = time;
               }
@@ -48,29 +72,34 @@
               else{
                   this.ctx.fillStyle = "rgb(0,0,0)";
               }
+              // Figure out the actual length of this line
               var width = diff * pixels_per_second;
-              this.ctx.fillRect (this.cur_pos,97,width,6);
+              this.ctx.fillRect (this.cur_pos,1,width,8);
+
+              // Set the animation line to the next color
               if (state == 0){
-                  this.ctx.fillStyle = "rgb(255,255,255)";
+                  this.ctx.fillStyle = "rgb(246,246,246)";
               }
               else{
                   this.ctx.fillStyle = "rgb(0,0,0)";
               }
               this.anim_dist = 0
               this.cur_pos += width;
-              if (this.cur_pos > canvas0.width){
-                this.cur_pos -= canvas0.width;
-                this.ctx.clearRect(0,0,canvas0.width,200)
+              if (this.cur_pos > this.canvas.width){
+                this.cur_pos -= this.canvas.width;
+                this.ctx.clearRect(0,0,this.canvas.width,200)
               }
             }
 
             client0 = new Client();
             client0.ctx = ctx0;
-            client0.run()
+            client0.canvas = canvas0;
+            client0.clear()
 
             client1 = new Client();
             client1.ctx = ctx1;
-            client1.run()
+            client1.canvas = canvas1;
+            client1.clear()
 
             ws.onmessage = function (event) {
                 var d = event.data.split(",")
