@@ -1,6 +1,7 @@
 
 import time
 import struct
+import logging
 import RPi.GPIO as GPIO
 from morseclient import MorseClient
 
@@ -55,7 +56,6 @@ class BoxMorseClient(MorseClient):
         GPIO.output(BUTTON_LED, state)
 
     def setLed(self, state):
-        print "LED is {0}".format(state)
         GPIO.output(BLUE_LED, state)
 
 if __name__ == "__main__":
@@ -71,9 +71,12 @@ if __name__ == "__main__":
     id = int(json_config["id"])
     channel = int(json_config["channel"])
 
+    log_location = "/var/log/morsebox/log.txt"
+
+    logging.basicconfig(filename=log_location, level=logging.DEBUG)
+
     mc = BoxMorseClient(server, port, id, channel)
     mc.connect()
-    pulses = []
     last_state_time = time.time()
     try:
         while 1:
@@ -83,13 +86,11 @@ if __name__ == "__main__":
                 if button_state:
                     length = time.time() - last_state_time
                     last_state_time = time.time()
-                    pulses.append((False, length))
                     mc.press()
                 else:
                     length = time.time() - last_state_time
                     last_state_time = time.time()
-                    pulses.append((True, length))
                     mc.unpress()
                 mc.last_state = button_state
-    except KeyboardInterrupt:
-        print pulses
+    except error as e:
+        logging.exception("Caught exception at top of pin control")

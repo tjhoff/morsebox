@@ -3,6 +3,7 @@
 import socket
 import struct
 import threading
+import logging
 import time
 import json
 
@@ -35,16 +36,16 @@ class Server:
     def _run_server(self):
         try:
             while True:
-                print("Waiting for connection")
+                logging.info("Waiting for connection")
                 conn, addr = self.s.accept()
 
                 client = Client(conn, addr, self.on_message, self.on_closed)
-                print("New client connected - id {0}".format(client.id))
+                logging.info("New client connected - id {0}".format(client.id))
                 client.start()
 
                 self.clients.append(client)
         except Exception as ex:
-            print(ex)
+            logging.exception("Exception during server run - shutting down.")
             for client in self.clients:
                 client.close()
         finally:
@@ -57,8 +58,8 @@ class Server:
         self.clients.remove(client)
         if client.channel and client.channel in self.channels and client in self.channels[client.channel]:
             self.channels[client.channel].remove(client)
-            print("Client {0} removed from channel {1}".format(client.id, client.channel))
-        print("Client {0} disconnected".format(client.id))
+            logging.info("Client {0} removed from channel {1}".format(client.id, client.channel))
+        logging.info("Client {0} disconnected".format(client.id))
 
     def on_message(self, client, msg):
 
@@ -69,20 +70,20 @@ class Server:
             channel = msg.channel
 
             if channel not in self.channels:
-                print("Created channel {0}".format(channel))
+                logging.info("Created channel {0}".format(channel))
                 self.channels[channel] = []
-            print("Adding {0} to {1}".format(msg.id, channel))
+            logging.info("Adding {0} to {1}".format(msg.id, channel))
             if len(self.channels[channel]) < 2:
                 self.channels[channel].append(client)
                 client.id = msg.id
                 client.channel = channel
             else:
-                print("Request to join full channel {0} from {1}".format(channel, client.addr))
+                logging.info("Request to join full channel {0} from {1}".format(channel, client.addr))
                 client.close()
 
         elif msg.typebyte == MessageType.CLICK:
             if client.channel == None:
-                print("Client has no channel. Ignoring.")
+                logging.warn("Client has no channel. Ignoring.")
                 return
 
             self.live_server.send_message(client.id, client.channel, LiveServerMessageType.PULSE, "{0} {1}".format(int(msg.state), msg.time))
@@ -134,12 +135,12 @@ class Client:
                     self.message_callback(self, message)
             except socket.error:
                 # better error handling here plox
-                print("Socket encountered error")
+                logging.exception("Client socket encountered error")
                 self.open = False
                 break
 
             self.ms.add_pulse(not d[0], time.time() - last_signal)
-            
+
             last_signal = time.time()
 
         self.close()
@@ -148,7 +149,7 @@ class Client:
         try:
             self.conn.close()
         except socket.error:
-            print("Error on closing {0}".format(self.id))
+            logging.exception("Error on closing {0}".format(self.id))
         self.closed_callback(self)
 
     def send_message(self, message):
@@ -157,7 +158,7 @@ class Client:
             self.conn.send(message.to_bytes())
             self.socklock.release()
         except socket.error:
-            print("Socket encountered error on send data")
+            logging.exception("Socket encountered error on send data")
             self.close()
 
 if __name__ == "__main__":
@@ -179,6 +180,6 @@ if __name__ == "__main__":
         while s.start_thread.is_alive:
             s.start_thread.join(5)
     except Exception as ex:
-        print("Encountered exception in main thread: {0}".format(ex))
+        logging.exception("Encountered exception in main thread")
     finally:
         s.close()
