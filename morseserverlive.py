@@ -18,7 +18,8 @@ class LiveServer:
         self.websocket_id = 0
 
     def send_message(self, client_id, channel_id, message_type, message_data):
-        for websocket, messages in self.websocket_messages.items():
+        items = self.websocket_messages.items()
+        for websocket, messages in items:
             messages.append([client_id, channel_id, message_type, message_data])
             # because asyncio is stupid "but there are no stupid programs, just stupid people!" YEAH WELL SHUT UP
             self.server_loop.call_soon_threadsafe(self.messages_available[websocket].set)
