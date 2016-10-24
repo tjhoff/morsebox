@@ -44,7 +44,6 @@ class MorseStream:
 
         # Get minimum "on" pulse
         min_pulse = min(last_set, key=lambda x: x[1])[1]
-        print min_pulse
 
         # Find dashes that are 2-4x the minimum
         dashes = map(lambda x: x[1], filter(find_dashes, last_set))
@@ -61,7 +60,7 @@ class MorseStream:
         wpm_approach_ratio = .01
 
         self.dots_per_second = (1-wpm_approach_ratio) * self.dots_per_second + wpm_approach_ratio * new_dots_per_second
-        print self.dots_per_second
+
         self.tolerance = .5/self.dots_per_second
 
 
@@ -128,7 +127,7 @@ class MorseStream:
             elif length > 3/self.dots_per_second - self.tolerance:
                 # done with current character
                 self.add_character()
-            # Pauses between dots and dashes are traditionally 1 dot length, but we'll just say everything but a character or word finish.
+            # Pauses between dots and dashes are traditionally 1 dot length, but we'll just say everything but a character or word finish is a pause.
             else:
                 pass
 

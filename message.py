@@ -1,4 +1,5 @@
 import struct
+import logging
 
 class MessageType:
     NONE = 0x00
@@ -52,7 +53,7 @@ class ClickMessage(Message):
         try:
             data = struct.unpack(self.fmt, bytes)
         except:
-            print("Bytes is {0} and {1}".format(len(bytes), bytes))
+            logging.exception("Bytes is {0} and {1}".format(len(bytes), bytes))
             return
         self.state = data[0]
         self.time = data[1]

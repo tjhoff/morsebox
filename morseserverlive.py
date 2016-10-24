@@ -1,6 +1,7 @@
 import websockets
 import asyncio
 import threading
+import logging
 import time
 
 class LiveServerMessageType:
@@ -39,7 +40,7 @@ class LiveServer:
             self.websocket_messages[websocket] = []
             self.messages_available[websocket] = asyncio.Event()
 
-            print("Websocket {0} connected - {0} total.".format(id, len(self.websocket_messages)))
+            logging.info("Websocket {0} connected - {0} total.".format(id, len(self.websocket_messages)))
             try:
                 while True:
                     await self.messages_available[websocket].wait()
@@ -50,7 +51,7 @@ class LiveServer:
                     self.messages_available[websocket].clear()
                     self.websocket_messages[websocket] = []
             finally:
-                print("Websocket {0} disconnected".format(id))
+                logging.info("Websocket {0} disconnected".format(id))
                 del self.websocket_messages[websocket]
 
         start_server = websockets.serve(time, '0.0.0.0', 5678)

@@ -2,12 +2,25 @@
 <html>
     <head>
         <title>Morsebox live view</title>
+
+<style>
+
+
+#pulsediv {
+margin: auto;
+position: absolute;
+top: 0;
+left: 0;
+bottom: 0;
+right: 0;
+}
+</style>
     </head>
     <body>
-        <h3>Box 1:<h3>
-        <canvas id="client0pulse" width="500" height="10"></canvas>
-          <h3>Box 2:<h3>
-          <canvas id="client1pulse" width="500" height="10"></canvas>
+        <div id="pulsediv">
+            <canvas id="client0pulse" width="500" height="50"></canvas>
+            <canvas id="client1pulse" width="500" height="50"></canvas>
+        </div>
         <script>
             var canvas0 = document.getElementById('client0pulse');
             canvas0.width = document.body.clientWidth;
@@ -15,7 +28,7 @@
             var canvas1 = document.getElementById('client1pulse');
             canvas1.width = document.body.clientWidth;
             var ctx1 = canvas1.getContext('2d');
-            var ws = new WebSocket("ws://gentlemeninventors.com:5678/"),
+            var ws = new WebSocket("ws://localhost:5678/"),
                 messages = document.createElement('ul');
             var seconds_in_graph = 30;
             var pixels_per_second = canvas0.width/seconds_in_graph;

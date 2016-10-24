@@ -4,12 +4,10 @@ import socket
 import struct
 import time
 import threading
+import logging
 import select
 
 from message import get_message, ClickMessage, HeartbeatMessage, RegisterMessage, MessageType
-
-TCP_IP = 'gentlemeninventors.com'
-TCP_PORT = 5005
 
 class MorseClient:
 
@@ -56,9 +54,9 @@ class MorseClient:
                 recv_thread.join()
                 if not self.reconnect:
                     break
-                print("Reconnecting...")
+                logging.info("Disconnected with reconnect set to true - retrying.")
             except socket.error as ex:
-                print("Failed to connect - {0}".format(ex))
+                logging.warn("Failed to connect.")
                 time.sleep(.5)
 
     def disconnect(self):
@@ -67,7 +65,7 @@ class MorseClient:
             #self.s.shutdown(socket.SHUT_WR)
             self.s.close()
         except socket.error as ex:
-            print("Got {0} while trying to disconnect...".format(ex))
+            logging.exception("Got exception while trying to disconnect...")
             pass
         finally:
             self.on_disconnected()
@@ -80,7 +78,7 @@ class MorseClient:
         try:
             self.s.send(msg.to_bytes())
         except socket.error as ex:
-            print("Got socket error on send - {0}".format(ex))
+            logging.exception("Got socket error on send")
             self.reconnect = True
             self.disconnect()
         self.socklock.release()
@@ -93,14 +91,13 @@ class MorseClient:
 
     def recv(self):
         while self.connected:
-
             message = None
             try:
                 data = self.s.recv(1)
                 if data:
                     message = get_message(data)
                     if not message:
-                        print("Message is of unknown type.")
+                        logging.warn("Message is of unknown type.")
                         continue
                     buf = bytearray()
                     while len(buf) < message.get_size():
@@ -108,7 +105,7 @@ class MorseClient:
             except socket.error as ex:
                 if socket.error == socket.timeout:
                     continue
-                print("Got socket error on recv - {0}".format(ex))
+                logging.exception("Got socket error on recv")
                 self.reconnect = True
                 self.disconnect()
                 break
@@ -117,11 +114,11 @@ class MorseClient:
 
                 if message.typebyte == MessageType.CLICK:
                     self.on_click_message(message.state)
-        print("Recv thread exiting")
+        logging.info("Recv thread exiting")
 
 
     def on_click_message(self, click):
-        print("Client got {0}".format(click))
+        logging.debug("Client got {0}".format(click))
 
     def on_connected(self):
         pass

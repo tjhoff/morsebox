@@ -80,19 +80,20 @@ def test_live_integration():
     time.sleep(.1)
 
     def run_client(client, message):
-        pulses = morsestream.MorseStream.generate_pulses(message, 4)
-        for pulse in pulses:
-            if not pulse[0]:
-                time.sleep(pulse[1])
-            else:
-                client.press()
-                time.sleep(pulse[1])
-                client.unpress()
-        client.unpress()
+        while True:
+            pulses = morsestream.MorseStream.generate_pulses(message, 4)
+            for pulse in pulses:
+                if not pulse[0]:
+                    time.sleep(pulse[1])
+                else:
+                    client.press()
+                    time.sleep(pulse[1])
+                    client.unpress()
+            client.unpress()
 
-    t1 = threading.Thread(target=run_client, kwargs={"client": c, "message": "hello you butthole"})
+    t1 = threading.Thread(target=run_client, kwargs={"client": c, "message": "this is a test message"})
 
-    t2 = threading.Thread(target=run_client, kwargs={"client": c2,  "message": "you are a jerk"})
+    t2 = threading.Thread(target=run_client, kwargs={"client": c2,  "message": "you're a test message!"})
     t1.daemon = t2.daemon = True
     t1.start()
     t2.start()
